@@ -8,7 +8,7 @@ script functioning :
 a script that will be used to monitor websites given with keywords, the command should be running in background until user kill or stop it
 
 
-first usage of script :  user should enter info that will be saved in configfile (sender email,password, receivers email,email domaine,...)
+first usage of script :  user should enter info that will be saved in configfile (sender email,password,email domaine, receivers email,...)
 
 script usage : sudo(if necessary) monitor -k ... -w ... 
 
