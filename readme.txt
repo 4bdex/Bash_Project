@@ -16,7 +16,7 @@ La syntaxe d’exécution du programme doit respecter la structure d’une comma
 Linux, à savoir : programname [options] [paramètre]
 
 params : 
-    -a: if option provided , keywords should not exists
+    
     -k: [keywords list] or keywordsfile.txt
     -w: [Websites list] or websites.txt
     -r: [receivers list] or receivers.txt
@@ -31,9 +31,7 @@ journalisation nommé history.log, situé dans le répertoire /var/log/yourprogr
 Chaque ligne dans ce fichier doit être précédée de la date et de l'heure au format yyyy-
 mm-dd-hh-mm-ss, suivies du nom de l’utilisateur connecté et du type de message (INFOS
 
-pour les messages de sortie standard et ERROR pour les messages d'erreur). Par exemple:
-▪ yyyy-mm-dd-hh-mm-ss : username : INFOS : message de l’output standard
-▪ yyyy-mm-dd-hh-mm-ss : username : ERROR : message de l’erreur standard
+
 
 Gestion d’erreur :
 Le programme doit activement gérer les erreurs résultant d'une utilisation incorrecte, telles
