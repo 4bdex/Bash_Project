@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        fprintf(stderr, "Incorrect Argument Passed , Usage:  [-f] COMMAND\n");
+        fprintf(stderr, "Incorrect Argument Passed , Usage:  [-t] COMMAND\n");
 
         return EXIT_FAILURE;
     }
