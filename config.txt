@@ -1,0 +1,2 @@
+CONFIG_FILE=config.txt
+HISTORY_LOG=/var/log/monitor/history.log
