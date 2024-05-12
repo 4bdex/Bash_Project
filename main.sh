@@ -60,7 +60,7 @@ itswebsite=0
 check_root() {
     if [ "$EUID" -ne 0 ]; then
         echo "Please run as root"
-        exit 1
+        # exit 1
     fi
 }
 
@@ -293,28 +293,38 @@ log_history() {
 execute_monitor_script() {
     # Log the keyword and the website in the history log
     log_history
+    echo "Keywords: ${keywords[@]}"
+    echo "Websites: ${websites[@]}"
+    echo "Should exist: $should_exist"
     
     # Execute the monitoring script
     if [ "$fork" = true ]; then
         # Execute the program with fork
         echo "Executing the program with fork"
-        # "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
-        echo "./runas/runas -f "$MONITOR_SCRIPT -k ${keywords[@]} -w ${websites[@]} -a $should_exist""
-
+        # if should_exist is true, then the keywords should exist
+        if [ "$should_exist" = true ]; then
+            ./runas -f  -k ${keywords[@]} -w ${websites[@]}
+        else
+            ./runas -f -k ${keywords[@]} -w ${websites[@]} -a
+        fi
         elif [ "$threads" = true ]; then
         # Execute the program with threads
-        echo "Executing the program with threads"
-                                           
-        ./runas/runas -t "$MONITOR_SCRIPT -k ${keywords[@]} -w ${websites[@]} -a $should_exist"
-        ./runas/runas -f -k Gmail help -w https://www.google.com/ https://doc.ubuntu-fr.org/tutoriel/script_shell -a
+        echo "Executing the program with threads"                           
+        if [ "$should_exist" = true ]; then
+            ./runas -t -k ${keywords[@]} -w ${websites[@]}
+        else
+            ./runas -t -k ${keywords[@]} -w ${websites[@]} -a
+        fi
         elif [ "$subshell" = true ]; then
         # Execute the program in a subshell
         echo "Executing the program in a subshell"
           echo "PID: $$"
         # Execute the program in a subshell
-        (
-            "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
-        )
+        if [ "$should_exist" = true ]; then
+            (./runas -s -k ${keywords[@]} -w ${websites[@]})
+        else
+            (./runas -s -k ${keywords[@]} -w ${websites[@]} -a)
+        fi
         
     else
         # Execute the program normally
@@ -341,13 +351,13 @@ main() {
 
         # insert data in SMTP_CONFIG
 
-        cat>SMTP_CONFIG<<EOF
-        root=$email
-        mailhub=$domain
-        AuthUser=$email
-        AuthPass=$password
-        UseSTARTTLS=yes
-        EOF
+        # cat>SMTP_CONFIG<<EOF
+        # root=$email
+        # mailhub=$domain
+        # AuthUser=$email
+        # AuthPass=$password
+        # UseSTARTTLS=yes
+        # EOF
         
         # ask user to provide the receivers list
         echo "Please provide the receivers list"

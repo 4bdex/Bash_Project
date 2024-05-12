@@ -57,30 +57,57 @@ fi
 
 # Iterate over each website and check if the keywords exists based on the should_exist value
 
-for website in "${websites[@]}"; do
+# for website in "${websites[@]}"; do
+#     echo "Checking $website"
+#     for keyword in "${keywords[@]}"; do
+#         echo "Checking for keyword: $keyword"
+#         # Check if the keyword exists in the website
+#         if curl -s "$website" | grep -q "$keyword"; then
+#             # Log the keyword and website in the history log
+#             echo "$(date) - $keyword found in $website" >> "$HISTORY_LOG"
+#             if [ "$should_exist" = false ]; then
+#                 echo "Keyword $keyword found in $website"
+#             fi
+#         else
+#             # Log the keyword and website in the history log
+#             echo "$(date) - $keyword not found in $website" >> "$HISTORY_LOG"
+#             if [ "$should_exist" = true ]; then
+#                 echo "Keyword $keyword not found in $website"
+#                 break
+#             fi
+#         fi
+#     done
+# done
+# a while loop to check for each website if the keywords exist or not based on the should_exist value, 
+# if result is true, then it will break the loop , remove the website from the list and continue to the next website
+# print the result of the check for each website passed the check
+
+while [ ${#websites[@]} -gt 0 ]; do
+    website=${websites[0]}
     echo "Checking $website"
     for keyword in "${keywords[@]}"; do
         echo "Checking for keyword: $keyword"
         # Check if the keyword exists in the website
-        if curl -s "$website" | grep -q "$keyword"; then
-            # Log the keyword and website in the history log
-            echo "$(date) - $keyword found in $website" >> "$HISTORY_LOG"
-            if [ "$should_exist" = false ]; then
+        websiteContent=$(curl -s -L "$website")
+        # comparisation should not be case sensitive
+        if echo "$websiteContent" | grep -qi "$keyword"; then
+            if [ "$should_exist" = true ]; then
                 echo "Keyword $keyword found in $website"
+                # Remove the website from the list
+                websites=("${websites[@]:1}")
+                break
             fi
         else
-            # Log the keyword and website in the history log
-            echo "$(date) - $keyword not found in $website" >> "$HISTORY_LOG"
-            if [ "$should_exist" = true ]; then
+            if [ "$should_exist" = false ]; then
                 echo "Keyword $keyword not found in $website"
+                # Remove the website from the list
+                websites=("${websites[@]:1}")
+                break
             fi
         fi
     done
 done
 
+# end script 
+kill -9 $$
 
-# Print the keywords and the websites
-echo "history log: $HISTORY_LOG"
-echo "Should exist: $should_exist"
-echo "Keywords: ${keywords[@]}"
-echo "Websites: ${websites[@]}"
