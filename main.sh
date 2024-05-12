@@ -225,7 +225,7 @@ display_help() {
 
 # Function to parse the command-line arguments
 parse_arguments() {
-    for arg in $* ; do
+    for arg in $@ ; do
         if [ "$arg" == '-k' ]; then
                 itskeyword=1
                 itswebsite=0
@@ -234,24 +234,29 @@ parse_arguments() {
                 itskeyword=0
                 itswebsite=1
 
+        #if the argument is an option, then we should skip it
+        # -a without argument
         elif [ "$arg" == "-a" ]; then
-                itskeyword=0
-                itswebsite=0
-
+            echo "option -a provided"
+                should_exist="false"
+        elif [ "$arg" == "-f" ]; then
+                echo "option -f provided"
+                fork=true
+        elif [ "$arg" == "-t" ]; then
+                echo "option -t provided"
+                threads=true
+        elif [ "$arg" == "-s" ]; then
+                echo "option -s provided"
+                subshell=true
+        elif [ "$arg" == "-r" ]; then
+                # Reset default parameters (admin only)
+                echo "Reset default parameters"
+                exit 0
         elif [ $itskeyword -eq 1 ]; then
                 keywords="$keywords $arg"
 
         elif [ $itswebsite -eq 1 ]; then
                 websites="$websites $arg"
-        elif [ "$arg" == "-a" ]; then
-            shift
-            should_exist="false"
-        elif [ "$arg" == "-f" ]; then
-            fork=true
-        elif [ "$arg" == "-t" ]; then
-            threads=true
-        elif [ "$arg" == "-s" ]; then
-            subshell=true
         fi
        
 done
@@ -261,7 +266,8 @@ done
 check_required_arguments() {
     if [ ${#keywords[@]} -eq 0 ] || [ ${#websites[@]} -eq 0 ]; then
         echo "Please provide all required arguments"
-        echo "Usage: $0 -k keyword -w website -d receivers -e email:password:emaildomain:port -l log_directory [-f] [-t] [-s]" >&2
+        echo "Usage: $0 -k keyword -w website" >&2
+        echo "Use -h option for more details" >&2
         exit 1
     fi
 }
@@ -299,10 +305,13 @@ execute_monitor_script() {
         elif [ "$subshell" = true ]; then
         # Execute the program in a subshell
         echo "Executing the program in a subshell"
-        "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
+        # Execute the program in a subshell
+        ( "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist" )
+        
     else
         # Execute the program normally
         echo "Executing the program normally"
+        echo "shoud exist: $should_exist"
         echo "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
         "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
     fi

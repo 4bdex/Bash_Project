@@ -1,6 +1,7 @@
 #!/bin/bash
 # Usage: sudo monitor.sh -k keyword1 keyword2 ... -w website1 website2 ... -a true|false
-
+# Check if the command is being run in a subshell
+echo "$(ps -ef | grep check.sh)"
 # Constants
 CONFIG_FILE="config.txt"
 
@@ -37,13 +38,13 @@ for arg in $* ; do
         elif [ $itswebsite -eq 1 ]; then
                 websites+=("$arg")
         else
-                a=$arg
+                should_exist=$arg
         fi
 done
 
-echo "Keywords: ${keywords[@]}"
-echo "Websites: ${websites[@]}"
-echo "Should exist: $a"
+# echo "Keywords: ${keywords[@]}"
+# echo "Websites: ${websites[@]}"
+# echo "Should exist: $should_exist"
 
 # Log the keywords and the websites in the history log
 # Check if the history log file exists
