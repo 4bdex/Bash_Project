@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 
         pthread_exit(NULL);
     }
-    else if (argc == 2 && strcmp(argv[1], "-t") != 0)
+    else if (argc > 2 && strcmp(argv[1], "-f") == 0)
     { // default value running as proccess
         pid_t pid = fork();
 
@@ -34,13 +34,13 @@ int main(int argc, char **argv)
             return EXIT_FAILURE;
 
         if (pid == 0)
-            system(argv[1]);
-
-        printf("%d\n", pid);
+            system(argv[2]);
+        if (pid > 0)
+            printf("%d\n", pid);
     }
     else
     {
-        fprintf(stderr, "Incorrect Argument Passed , Usage:  [-t] COMMAND\n");
+        fprintf(stderr, "Incorrect Argument Passed , Usage:  [-t|-f] COMMAND\n");
 
         return EXIT_FAILURE;
     }
