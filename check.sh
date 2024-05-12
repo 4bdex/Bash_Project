@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage: sudo monitor.sh -k keyword -w website -a true|false
+# Usage: sudo monitor.sh -k keyword1 keyword2 ... -w website1 website2 ... -a true|false
 
 # Constants
 CONFIG_FILE="config.txt"
@@ -7,75 +7,77 @@ CONFIG_FILE="config.txt"
 # Get History log file path from config file
 HISTORY_LOG=$(grep -i "history_log" "$CONFIG_FILE" | cut -d'=' -f2)
 
-# Initialize variables
-keyword=""
-website=""
+# Initialize arrays
+keywords=()
+websites=()
 should_exist=""
+itskeyword=0
+itswebsite=0
 
-# Check if the keyword exists on the website
-# Returns 0 if the keyword is found, 1 otherwise
-check_keyword_in_website() {
-    local keyword="$1"
-    local website="$2"
-    local should_exist="$3"
-    
-    # Get the website content
-    local website_content=$(curl -s "$website")
-    
-    # Check if the keyword exists in the website content
-    if [ "$should_exist" = "true" ]; then
-        [[ "$website_content" == *"$keyword"* ]]
-    else
-        [[ "$website_content" != *"$keyword"* ]]
-    fi
-}
+
 
 # Parse command-line arguments
-while getopts ":k:w:a:" opt; do
-    case ${opt} in
-        k) 
-            keyword="$OPTARG"
-            ;;
-        w) 
-            website="$OPTARG"
-            ;;
-        a) 
-            echo "received a: $OPTARG"
-            should_exist="$OPTARG" # Set should_exist based on the value provided with -a
-            ;;
-        \?) 
-            echo "Invalid option: -$OPTARG" >&2
-            echo "Usage: $0 -k keyword -w website -a true|false" >&2
-            exit 1
-            ;;
-    esac
+for arg in $* ; do
+
+        if [ "$arg" == '-k' ]; then
+                itskeyword=1
+                itswebsite=0
+
+        elif [ "$arg" == '-w' ]; then
+                itskeyword=0
+                itswebsite=1
+
+        elif [ "$arg" == "-a" ]; then
+                itskeyword=0
+                itswebsite=0
+
+        elif [ $itskeyword -eq 1 ]; then
+                keywords+=("$arg")
+
+        elif [ $itswebsite -eq 1 ]; then
+                websites+=("$arg")
+        else
+                a=$arg
+        fi
 done
 
-# Check if the keyword, website, and should_exist are provided
-if [ -z "$keyword" ] || [ -z "$website" ] || [ -z "$should_exist" ]; then
-    echo "Please provide both keyword, website, and should_exist"
-    echo "Usage: $0 -k keyword -w website -a true|false" >&2
-    exit 1
-fi
+echo "Keywords: ${keywords[@]}"
+echo "Websites: ${websites[@]}"
+echo "Should exist: $a"
 
-# Log the keyword and the website in the history log
+# Log the keywords and the websites in the history log
 # Check if the history log file exists
 if [ ! -f "$HISTORY_LOG" ]; then
     # Create the history log file if it doesn't exist (/var/log/monitor/history.log)
     mkdir -p "$(dirname "$HISTORY_LOG")"
     touch "$HISTORY_LOG"
 fi
-echo "Keyword: $keyword, Website: $website" >> "$HISTORY_LOG"
 
-# Check if the keyword exists on the website
-if check_keyword_in_website "$keyword" "$website" "$should_exist"; then
-    echo "true"
-else
-    echo  "false"
-fi
+# Iterate over each website and check if the keywords exists based on the should_exist value
+for website in "${websites[@]}"; do
+    echo "Checking $website"
+    for keyword in "${keywords[@]}"; do
+        echo "Checking for keyword: $keyword"
+        # Check if the keyword exists in the website
+        if curl -s "$website" | grep -q "$keyword"; then
+            # Log the keyword and website in the history log
+            echo "$(date) - $keyword found in $website" >> "$HISTORY_LOG"
+            if [ "$should_exist" = false ]; then
+                echo "Keyword $keyword found in $website"
+            fi
+        else
+            # Log the keyword and website in the history log
+            echo "$(date) - $keyword not found in $website" >> "$HISTORY_LOG"
+            if [ "$should_exist" = true ]; then
+                echo "Keyword $keyword not found in $website"
+            fi
+        fi
+    done
+done
 
-# Print the keyword and the website
+
+# Print the keywords and the websites
 echo "history log: $HISTORY_LOG"
 echo "Should exist: $should_exist"
-echo "Keyword: $keyword"
-echo "Website: $website"
+echo "Keywords: ${keywords[@]}"
+echo "Websites: ${websites[@]}"
