@@ -65,8 +65,9 @@ int main(int argc, char **argv)
             websites[numWebsites] = argv[i];
             numWebsites++;
         }
-        else{
-    
+        else
+        {
+
             fprintf(stderr, "Incorrect Argument Passed , Usage:  [-t|-f|-s] [-a] -k KEYWORDS -w WEBSITES\n");
             return EXIT_FAILURE;
         }
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
     {
         for (int i = 0; i < numWebsites; i++)
         {
-            sprintf(command, "%s -k %s -w %s %s", scriptName , keywords, websites[i], ((shouldExists) ? "-a true" : "-a false"));
+            sprintf(command, "%s -k %s -w %s %s", scriptName, keywords, websites[i], ((shouldExists) ? "-a true" : "-a false"));
 
             pthread_t tid;
 
@@ -102,7 +103,7 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < numWebsites; i++)
         {
-            sprintf(command, "%s -k %s -w %s %s", scriptName , keywords, websites[i], ((shouldExists) ? "-a true" : "-a false"));
+            sprintf(command, "%s -k %s -w %s %s", scriptName, keywords, websites[i], ((shouldExists) ? "-a true" : "-a false"));
 
             pid_t pid = fork();
 
@@ -118,12 +119,15 @@ int main(int argc, char **argv)
                 break;
             }
         }
+
+        while (wait(NULL) > 0)
+            ; // wait for all child proccess to finish
     }
     else if (strcmp(option, "-s") == 0)
     {
         for (int i = 0; i < numWebsites; i++)
         {
-            sprintf(command, "%s -k %s -w %s %s", scriptName , keywords, websites[i], ((shouldExists) ? "-a true" : "-a false"));
+            sprintf(command, "%s -k %s -w %s %s", scriptName, keywords, websites[i], ((shouldExists) ? "-a true" : "-a false"));
 
             printf("[*] New sub-shell runnig command : [%s]\n", command);
 
