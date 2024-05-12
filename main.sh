@@ -38,7 +38,7 @@
 
 # Constants
 CONFIG_FILE="config.txt"
-MONITOR_SCRIPT="./check.sh" # usage ./check.sh -k keyword -w website [-a] 
+MONITOR_SCRIPT="./check.sh" # usage ./check.sh -k keyword -w website [-a]
 # get History log file path from config file
 HISTORY_LOG=$(grep -i "history_log" "$CONFIG_FILE" | cut -d'=' -f2)
 
@@ -52,6 +52,8 @@ fork=false
 threads=false
 subshell=false
 should_exist="true" # Default value if -a option is not provided
+itskeyword=0
+itswebsite=0
 
 # Function to check if the script is running as root
 check_root() {
@@ -61,7 +63,7 @@ check_root() {
     fi
 }
 
-# Function to check if the script is running with the right number of arguments 
+# Function to check if the script is running with the right number of arguments
 # the user can use help option to display the usage, so we don't need to check the number of arguments
 #also same for reset option, other than that we need to check the number of arguments
 check_arguments() {
@@ -76,9 +78,7 @@ check_arguments() {
 
 # Function to get the keywords from the user
 get_keywords() {
-    # Initialize an empty array to store arguments after -k
-    keywords=()
-    
+    echo "get_keywords"
     # Flag to indicate if we're currently collecting keywords
     collecting_keywords=false
     
@@ -98,17 +98,23 @@ get_keywords() {
         if [ "$arg" = "-k" ]; then
             # Set flag to start collecting keywords
             collecting_keywords=true
-        elif [ "$collecting_keywords" = true ]; then
-            # If we are currently collecting keywords, add the argument to the array
-            keywords+=("$arg")
+            elif [ "$collecting_keywords" = true ]; then
+            # if args start with - then it's an option
+            if [[ "$arg" == -* ]]; then
+                # If we are currently collecting keywords, add the argument to the array
+                break
+            fi
+            # else break the loop
+
+              keywords+=("$arg")
+            
         fi
     done
 }
 
 # Function to get the websites from the user
 get_websites() {
-    # Initialize an empty array to store arguments after -w
-    websites=()
+    echo "get_websites"
     
     # Flag to indicate if we're currently collecting websites
     collecting_websites=false
@@ -129,9 +135,13 @@ get_websites() {
         if [ "$arg" = "-w" ]; then
             # Set flag to start collecting websites
             collecting_websites=true
-        elif [ "$collecting_websites" = true ]; then
-            # If we are currently collecting websites, add the argument to the array
-            websites+=("$arg")
+            elif [ "$collecting_websites" = true ]; then
+            # if args start with - then it's an option
+            if [[ "$arg" != -* ]]; then
+                # If we are currently collecting websites, add the argument to the array
+                websites+=("$arg")
+            fi
+            
         fi
     done
 }
@@ -160,7 +170,7 @@ get_receivers() {
         if [ "$arg" = "-d" ]; then
             # Set flag to start collecting receivers
             collecting_receivers=true
-        elif [ "$collecting_receivers" = true ]; then
+            elif [ "$collecting_receivers" = true ]; then
             # If we are currently collecting receivers, add the argument to the array
             receivers+=("$arg")
         fi
@@ -215,56 +225,49 @@ display_help() {
 
 # Function to parse the command-line arguments
 parse_arguments() {
-    # Parse command-line arguments
-    while getopts ":k:w:d:e:l:afths" opt; do
-        case ${opt} in
-            k) 
-                get_keywords "$@"
-                ;;
-            w) 
-                get_websites "$@"
-                ;;
-            a) 
-                echo "Debug: -a option detected"
-                should_exist="false"  # Set should_exist to false when -a is provided
-                ;;
-            d) 
-                get_receivers "$@"
-                ;;
-            e) 
-                get_email_config "$@"
-                ;;
-            l) 
-                get_log_directory "$@"
-                ;;
-            f) 
+    for arg in $@ ; do
+        if [ "$arg" == '-k' ]; then
+                itskeyword=1
+                itswebsite=0
+
+        elif [ "$arg" == '-w' ]; then
+                itskeyword=0
+                itswebsite=1
+
+        #if the argument is an option, then we should skip it
+        # -a without argument
+        elif [ "$arg" == "-a" ]; then
+            echo "option -a provided"
+                should_exist="false"
+        elif [ "$arg" == "-f" ]; then
+                echo "option -f provided"
                 fork=true
-                ;;
-            t) 
+        elif [ "$arg" == "-t" ]; then
+                echo "option -t provided"
                 threads=true
-                ;;
-            s) 
+        elif [ "$arg" == "-s" ]; then
+                echo "option -s provided"
                 subshell=true
-                ;;
-            h) 
-                display_help
+        elif [ "$arg" == "-r" ]; then
+                # Reset default parameters (admin only)
+                echo "Reset default parameters"
                 exit 0
-                ;;
-            \?) 
-                echo "Invalid option: -$OPTARG" >&2
-                echo "Usage: $0 -k keyword -w website" >&2
-                echo "Use -h option for more details" >&2
-                exit 1
-                ;;
-        esac
-    done
+        elif [ $itskeyword -eq 1 ]; then
+                keywords="$keywords $arg"
+
+        elif [ $itswebsite -eq 1 ]; then
+                websites="$websites $arg"
+        fi
+       
+done
 }
 
 # Function to check if the required arguments are provided
 check_required_arguments() {
     if [ ${#keywords[@]} -eq 0 ] || [ ${#websites[@]} -eq 0 ]; then
         echo "Please provide all required arguments"
-        echo "Usage: $0 -k keyword -w website -d receivers -e email:password:emaildomain:port -l log_directory [-f] [-t] [-s]" >&2
+        echo "Usage: $0 -k keyword -w website" >&2
+        echo "Use -h option for more details" >&2
         exit 1
     fi
 }
@@ -295,18 +298,20 @@ execute_monitor_script() {
         # Execute the program with fork
         echo "Executing the program with fork"
         "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
-    elif [ "$threads" = true ]; then
+        elif [ "$threads" = true ]; then
         # Execute the program with threads
         echo "Executing the program with threads"
         "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
-    elif [ "$subshell" = true ]; then
+        elif [ "$subshell" = true ]; then
         # Execute the program in a subshell
         echo "Executing the program in a subshell"
-        "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
+        # Execute the program in a subshell
+        ( "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist" )
+        
     else
         # Execute the program normally
         echo "Executing the program normally"
-        echo "$should_exist"
+        echo "shoud exist: $should_exist"
         echo "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
         "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
     fi
