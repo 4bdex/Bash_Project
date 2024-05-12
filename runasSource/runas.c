@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 
             pthread_t tid;
 
-            if (pthread_create(&tid, NULL, myThreadFun, (void *)argv[2]) == EXIT_FAILURE)
+            if (pthread_create(&tid, NULL, myThreadFun, (void *)command) == EXIT_FAILURE)
                 return EXIT_FAILURE;
 
             printf("[*] New thread runnig with tid : %ld command : [%s]\n", tid, command);
