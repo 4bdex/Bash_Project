@@ -16,7 +16,7 @@ La syntaxe d’exécution du programme doit respecter la structure d’une comma
 Linux, à savoir : programname [options] [paramètre]
 
 params : 
-    
+    # ./ monitor.sh config
     -k: [keywords list] or keywordsfile.txt
     -w: [Websites list] or websites.txt
     -r: [receivers list] or receivers.txt

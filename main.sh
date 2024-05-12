@@ -41,6 +41,7 @@ CONFIG_FILE="config.txt"
 MONITOR_SCRIPT="./check.sh" # usage ./check.sh -k keyword -w website [-a]
 # get History log file path from config file
 HISTORY_LOG=$(grep -i "history_log" "$CONFIG_FILE" | cut -d'=' -f2)
+SMTP_CONFIG=$(grep -i "smtp_config" "$CONFIG_FILE" | cut -d'=' -f2)
 
 # Initialize variables
 keywords=()
@@ -297,22 +298,29 @@ execute_monitor_script() {
     if [ "$fork" = true ]; then
         # Execute the program with fork
         echo "Executing the program with fork"
-        "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
+        # "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
+        echo "./runas/runas -f "$MONITOR_SCRIPT -k ${keywords[@]} -w ${websites[@]} -a $should_exist""
+
         elif [ "$threads" = true ]; then
         # Execute the program with threads
         echo "Executing the program with threads"
-        "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
+                                           
+        ./runas/runas -t "$MONITOR_SCRIPT -k ${keywords[@]} -w ${websites[@]} -a $should_exist"
+        ./runas/runas -f -k Gmail help -w https://www.google.com/ https://doc.ubuntu-fr.org/tutoriel/script_shell -a
         elif [ "$subshell" = true ]; then
         # Execute the program in a subshell
         echo "Executing the program in a subshell"
+          echo "PID: $$"
         # Execute the program in a subshell
-        ( "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist" )
+        (
+            "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
+        )
         
     else
         # Execute the program normally
         echo "Executing the program normally"
         echo "shoud exist: $should_exist"
-        echo "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
+        echo "PID: $$"
         "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
     fi
 }
@@ -324,6 +332,36 @@ main() {
     if [ "$1" = "-h" ]; then
         display_help
     fi
+    if [ "$1" = "config" ]; then
+        # ask user to provide the configuration file (email , password , domain:port , receivers list)
+        echo "Please provide the email configuration"
+        read -p "Email: " email
+        read -p "Password: " password
+        read -p "Email Domain: " domain
+
+        # insert data in SMTP_CONFIG
+
+        cat>SMTP_CONFIG<<EOF
+        root=$email
+        mailhub=$domain
+        AuthUser=$email
+        AuthPass=$password
+        UseSTARTTLS=yes
+        EOF
+        
+        # ask user to provide the receivers list
+        echo "Please provide the receivers list"
+        while true; do
+            read -p "Enter receiver email (or 'q' to quit): " receiver
+            if [ "$receiver" = "q" ]; then
+                break
+            fi
+            # add receiver to receivers.txt file
+            echo "$receiver" >> receivers.txt
+        done
+        echo "">> receivers.txt
+        exit 0
+    fi
     check_root
     check_arguments "$@"
     parse_arguments "$@"
@@ -333,16 +371,3 @@ main() {
 
 # Run the main function
 main "$@"
-
-
-
-
-
-
-
-
-
-
-
-
-
