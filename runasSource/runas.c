@@ -21,6 +21,14 @@ void *myThreadFun(void *vargp)
 }
 int main(int argc, char **argv)
 {
+
+    if (argc < 6)
+    {
+        printf("%d", argc);
+        fprintf(stderr, "Incorrect Argument Passed , Usage:  [-t|-f|-s] [-a] -k KEYWORDS -w WEBSITES\n");
+        return EXIT_FAILURE;
+    }
+
     char keywords[1024] = {'\0'};
     char *websites[256];
     bool shouldExists = true; // search for the existance of the keywords or the inverse
@@ -67,7 +75,6 @@ int main(int argc, char **argv)
         }
         else
         {
-
             fprintf(stderr, "Incorrect Argument Passed , Usage:  [-t|-f|-s] [-a] -k KEYWORDS -w WEBSITES\n");
             return EXIT_FAILURE;
         }
