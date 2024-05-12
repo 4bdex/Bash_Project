@@ -56,11 +56,12 @@ should_exist="true" # Default value if -a option is not provided
 itskeyword=0
 itswebsite=0
 
+
 # Function to check if the script is running as root
 check_root() {
     if [ "$EUID" -ne 0 ]; then
         echo "Please run as root"
-        # exit 1
+        exit 1
     fi
 }
 
@@ -77,134 +78,7 @@ check_arguments() {
     fi
 }
 
-# Function to get the keywords from the user
-get_keywords() {
-    echo "get_keywords"
-    # Flag to indicate if we're currently collecting keywords
-    collecting_keywords=false
-    
-    # Iterate through the arguments
-    for arg in "$@"; do
-        # check if argument is a file
-        if [ -f "$arg" ]; then
-            # Read the file contents and add each line to the keywords array
-            while IFS= read -r line || [ -n "$line" ]
-            do
-                keywords+=("$line")
-            done < "$arg"
-            break
-        fi
-        
-        # If -k option is found
-        if [ "$arg" = "-k" ]; then
-            # Set flag to start collecting keywords
-            collecting_keywords=true
-            elif [ "$collecting_keywords" = true ]; then
-            # if args start with - then it's an option
-            if [[ "$arg" == -* ]]; then
-                # If we are currently collecting keywords, add the argument to the array
-                break
-            fi
-            # else break the loop
 
-              keywords+=("$arg")
-            
-        fi
-    done
-}
-
-# Function to get the websites from the user
-get_websites() {
-    echo "get_websites"
-    
-    # Flag to indicate if we're currently collecting websites
-    collecting_websites=false
-    
-    # Iterate through the arguments
-    for arg in "$@"; do
-        # check if argument is a file
-        if [ -f "$arg" ]; then
-            # Read the file contents and add each line to the websites array
-            while IFS= read -r line || [ -n "$line" ]
-            do
-                websites+=("$line")
-            done < "$arg"
-            break
-        fi
-        
-        # If -w option is found
-        if [ "$arg" = "-w" ]; then
-            # Set flag to start collecting websites
-            collecting_websites=true
-            elif [ "$collecting_websites" = true ]; then
-            # if args start with - then it's an option
-            if [[ "$arg" != -* ]]; then
-                # If we are currently collecting websites, add the argument to the array
-                websites+=("$arg")
-            fi
-            
-        fi
-    done
-}
-
-# Function to get the receivers from the user
-get_receivers() {
-    # Initialize an empty array to store arguments after -d
-    receivers=()
-    
-    # Flag to indicate if we're currently collecting receivers
-    collecting_receivers=false
-    
-    # Iterate through the arguments
-    for arg in "$@"; do
-        # check if argument is a file
-        if [ -f "$arg" ]; then
-            # Read the file contents and add each line to the receivers array
-            while IFS= read -r line || [ -n "$line" ]
-            do
-                receivers+=("$line")
-            done < "$arg"
-            break
-        fi
-        
-        # If -d option is found
-        if [ "$arg" = "-d" ]; then
-            # Set flag to start collecting receivers
-            collecting_receivers=true
-            elif [ "$collecting_receivers" = true ]; then
-            # If we are currently collecting receivers, add the argument to the array
-            receivers+=("$arg")
-        fi
-    done
-}
-
-# Function to get the email configuration from the user
-get_email_config() {
-    # Iterate through the arguments
-    for arg in "$@"; do
-        # If -e option is found
-        if [ "$arg" = "-e" ]; then
-            # Get the next argument
-            shift
-            email_config="$1"
-            break
-        fi
-    done
-}
-
-# Function to get the log directory from the user
-get_log_directory() {
-    # Iterate through the arguments
-    for arg in "$@"; do
-        # If -l option is found
-        if [ "$arg" = "-l" ]; then
-            # Get the next argument
-            shift
-            log_directory="$1"
-            break
-        fi
-    done
-}
 # display help message
 display_help() {
     echo "Usage: $0 [options]"
@@ -226,40 +100,115 @@ display_help() {
 
 # Function to parse the command-line arguments
 parse_arguments() {
-    for arg in $@ ; do
-        if [ "$arg" == '-k' ]; then
-                itskeyword=1
-                itswebsite=0
+#     for arg in $@ ; do
 
-        elif [ "$arg" == '-w' ]; then
-                itskeyword=0
-                itswebsite=1
+#         if [ "$arg" == '-k' ]; then
+#                 itskeyword=1
+#                 itswebsite=0
 
-        #if the argument is an option, then we should skip it
-        # -a without argument
-        elif [ "$arg" == "-a" ]; then
-            echo "option -a provided"
-                should_exist="false"
-        elif [ "$arg" == "-f" ]; then
-                echo "option -f provided"
-                fork=true
-        elif [ "$arg" == "-t" ]; then
-                echo "option -t provided"
-                threads=true
-        elif [ "$arg" == "-s" ]; then
-                echo "option -s provided"
-                subshell=true
-        elif [ "$arg" == "-r" ]; then
-                # Reset default parameters (admin only)
-                echo "Reset default parameters"
-                exit 0
-        elif [ $itskeyword -eq 1 ]; then
-                keywords="$keywords $arg"
+#         elif [ "$arg" == '-w' ]; then
+#                 itskeyword=0
+#                 itswebsite=1
+#         #if the argument is an option, then we should skip it
+#         # -a without argument
+#         elif [ "$arg" == "-a" ]; then
+#                 should_exist="false"
+#                 itskeyword=0
+#                itswebsite=0
+#         elif [ "$arg" == "-f" ]; then
+#                 fork=true
+#                 itskeyword=0
+#                itswebsite=0
+#         elif [ "$arg" == "-t" ]; then
+#                 threads=true
+#                 itskeyword=0
+#                itswebsite=0
+#         elif [ "$arg" == "-s" ]; then
+#                 subshell=true
+#                 itskeyword=0
+#                 itswebsite=0
+#         elif [ "$arg" == "-r" ]; then
+#                 # Reset default parameters (admin only)
+#                 echo "Reset default parameters"
+#                 exit 0
+#                 itskeyword=0
+#                 itswebsite=0
+#         elif [ "$arg" == "-l" ]; then
+#                 # -l option is provided, get the log directory from the next argument (exemple: -k key1 key2 -w web1 -l /var/log)
+#                 log_directory=$2
+#                 itskeyword=0
+#                 itswebsite=0
 
-        elif [ $itswebsite -eq 1 ]; then
-                websites="$websites $arg"
-        fi
-       
+#         elif [ $itskeyword -eq 1 ]; then
+#                 keywords="$keywords $arg"
+
+#         elif [ $itswebsite -eq 1 ]; then
+#                 websites="$websites $arg"
+#         fi
+# done
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -k)
+            shift
+            # Add all following arguments until another flag is encountered to keywords array
+            while [[ $# -gt 0 && ! $1 == -* ]]; do
+                keywords+=("$1")
+                shift
+            done
+            ;;
+        -w)
+            shift
+            # Add all following arguments until another flag is encountered to websites array
+            while [[ $# -gt 0 && ! $1 == -* ]]; do
+                websites+=("$1")
+                shift
+            done
+            ;;
+        -l)
+            shift
+            # Check if there is an argument following -l flag
+            if [[ $# -gt 0 && ! $1 == -* ]]; then
+                log_directory="$1"
+                shift
+            else
+                echo "Error: Missing argument for -l flag"
+                exit 1
+            fi
+            ;;
+        -a)
+            # Set the flag if -a is provided
+            should_exist="false"
+            shift
+            ;;
+        -f)
+            # Set the flag if -f is provided
+            fork=true
+            shift
+            ;;
+        -t)
+            # Set the flag if -t is provided
+            threads=true
+            shift
+            ;;
+        -s)
+            # Set the flag if -s is provided
+            subshell=true
+            shift
+            ;;
+        -r)
+            # Reset default parameters (admin only)
+            echo "Reset default parameters"
+            exit 0
+            ;;
+        :)
+            echo "Error: Option -$OPTARG requires an argument"
+            exit 1
+            ;;
+        *)
+            echo "Error: Unknown option $1"
+            exit 1
+            ;;
+    esac
 done
 }
 
@@ -291,40 +240,46 @@ log_history() {
 
 # Function to execute the monitoring script
 execute_monitor_script() {
-    # Log the keyword and the website in the history log
-    log_history
-    echo "Keywords: ${keywords[@]}"
-    echo "Websites: ${websites[@]}"
-    echo "Should exist: $should_exist"
-    
+    # replace log_directory if not empty to the log directory in the config file
+    echo "Log directory: $log_directory"
+    if [ -n "$log_directory" ]; then
+        # if log directory isn't exist, create it
+        if [ ! -d "$log_directory" ]; then
+            mkdir -p "$log_directory"
+            touch "$log_directory/history.log"
+        fi
+        HISTORY_LOG="$log_directory/history.log"
+        echo "HIstory log: $HISTORY_LOG"
+        # replace the log directory in the config file
+        sed -i "s|HISTORY_LOG=.*|HISTORY_LOG=$HISTORY_LOG|" "$CONFIG_FILE"
+    fi
     # Execute the monitoring script
     if [ "$fork" = true ]; then
         # Execute the program with fork
         echo "Executing the program with fork"
         # if should_exist is true, then the keywords should exist
-        if [ "$should_exist" = true ]; then
-            ./runas -f  -k ${keywords[@]} -w ${websites[@]}
-        else
-            ./runas -f -k ${keywords[@]} -w ${websites[@]} -a
-        fi
+            if [ "$should_exist" = true ]; then
+                ./runas -f -k ${keywords[@]} -w ${websites[@]}
+            else
+                ./runas -f -k ${keywords[@]} -w ${websites[@]} -a
+            fi
         elif [ "$threads" = true ]; then
         # Execute the program with threads
         echo "Executing the program with threads"                           
-        if [ "$should_exist" = true ]; then
-            ./runas -t -k ${keywords[@]} -w ${websites[@]}
-        else
-            ./runas -t -k ${keywords[@]} -w ${websites[@]} -a
-        fi
+            if [ "$should_exist" = true ]; then
+                ./runas -t -k ${keywords[@]} -w ${websites[@]}
+            else
+                ./runas -t -k ${keywords[@]} -w ${websites[@]} -a
+            fi
         elif [ "$subshell" = true ]; then
         # Execute the program in a subshell
         echo "Executing the program in a subshell"
-          echo "PID: $$"
         # Execute the program in a subshell
-        if [ "$should_exist" = true ]; then
-            (./runas -s -k ${keywords[@]} -w ${websites[@]})
-        else
-            (./runas -s -k ${keywords[@]} -w ${websites[@]} -a)
-        fi
+            if [ "$should_exist" = true ]; then
+                ./runas -s -k ${keywords[@]} -w ${websites[@]}
+            else
+                ./runas -s -k ${keywords[@]} -w ${websites[@]} -a
+            fi
         
     else
         # Execute the program normally
@@ -372,6 +327,7 @@ main() {
         echo "">> receivers.txt
         exit 0
     fi
+    # -l option is provided, get the log directory
     check_root
     check_arguments "$@"
     parse_arguments "$@"

@@ -109,5 +109,5 @@ while [ ${#websites[@]} -gt 0 ]; do
 done
 
 # end script 
-kill -9 $$
+# kill the script
 
