@@ -2,14 +2,15 @@
 
 # Vérifier si le nombre d'arguments est correct
 if [ "$#" -ne 4 ]; then
-    echo "Usage: $0 <email1> <mot_de_passe_application_specifique> <Domaine_Name> <fichier_emails>"
+    echo "Usage: $0 <email1> <mot_de_passe_application_specifique> <Domaine_Name> <receivers.txt>"
     exit 1
 fi
 
 email1=$1
+
 mot_de_passe_app_specifique=$2
 domaine_Name=$3
-fichier_emails=$4
+fichier_emails=receivers.txt
 
 
 if [ ! -f "$fichier_emails" ]; then
@@ -34,3 +35,5 @@ while IFS= read -r email; do
 done < "$fichier_emails"
 
 echo "Tous les emails ont été envoyés avec succès!"
+
+ echo "Usage: $0 <email1> <mot_de_passe_application_specifique> <Domaine_Name> <fichier_emails> <body> <subject>"
