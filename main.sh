@@ -1,40 +1,5 @@
 #!/bin/bash
 
-# this is the main script
-
-# pour les messages de sortie standard et ERROR pour les messages d'erreur). Par exemple:
-# ▪ yyyy-mm-dd-hh-mm-ss : username : INFOS : message de l’output standard
-# ▪ yyyy-mm-dd-hh-mm-ss : username : ERROR : message de l’erreur standard
-
-# Gestion d’erreur :
-# Le programme doit activement gérer les erreurs résultant d'une utilisation incorrecte, telles
-# que le nombre inapproprié d'options ou l'échec d'un traitement exécuté par le script. Pour
-# chaque type d'erreur, un code spécifique doit être attribué afin de faciliter l'identification et
-# la résolution des problèmes. Voici quelques exemples de codes d'erreur :
-
-# o 100 : Option saisie non existante
-# o 101 : Paramètre obligatoire manquant
-# o ...
-
-# Votre script doit incorporer des commandes ou des outils Unix/Linux de base. Il peut
-# également faire appel à des scripts externes développés en Bash, en langage C, etc.
-# o Il doit prendre en charge une ou plusieurs données en paramètre, avec au moins une
-# donnée obligatoire.
-# o Le script doit aussi proposer, au moins, six options obligatoires, telles que :
-# -a: if option provided , keywords should not exists
-# -k: [keywords list] or keywordsfile.txt
-# -w: [Websites list] or websites.txt
-# -d: [receivers list] or receivers.txt
-# -e: email:password:emaildomain:port
-# ▪ -h (help): Affiche une documentation détaillée du programme.
-# ▪ -f (fork): Permet une exécution par création de sous-processus avec fork.
-# ▪ -t (thread): Permet une exécution par threads.
-# ▪ -s (subshell): Exécute le programme dans un sous-shell.
-# ▪ -l (log): Permet de spécifier un répertoire pour le stockage du fichier de
-# journalisation.
-# ▪ -r (restore): Réinitialise les paramètres par défaut, utilisable uniquement par des
-# administrateurs.
-# ▪ ...
 
 # Constants
 CONFIG_FILE="config.txt"
@@ -56,9 +21,14 @@ should_exist="true" # Default value if -a option is not provided
 itskeyword=0
 itswebsite=0
 
-
 # Function to log that takes the error code and the message as arguments
 log_message() {
+        # Check if the history log file exists
+    if [ ! -f "$HISTORY_LOG" ]; then
+        # Create the history log file if it doesn't exist (/var/log/monitor/history.log)
+        mkdir -p "$(dirname "$HISTORY_LOG")"
+        touch "$HISTORY_LOG"
+    fi
     # Get the current date and time
     current_date=$(date "+%Y-%m-%d %H:%M:%S")
     # Get the current user
@@ -67,10 +37,12 @@ log_message() {
     Type=$1
     # Get the message
     message=$2
- 
+    
     echo "$current_date : $current_user : $Type : $message" >> "$HISTORY_LOG"
 }
-
+# trap any generated error to invoke the log_message function with error and error content
+trap 'log_message "ERROR" "An error occurred in the script at line $LINENO"' ERR
+sjbjhbs
 # check if websites are valid
 check_web_sites() {
     for website in "${websites[@]}"; do
@@ -117,11 +89,11 @@ check_arguments() {
 display_help() {
     echo "Usage: $0 [options]"
     echo "Options:"
+    echo "  config               Configure the email settings and receivers list"
     echo "  -a                   If provided, keywords should not exist"
-    echo "  -k [keywords]        Keywords list or keywordsfile.txt"
-    echo "  -w [websites]        Websites list or websites.txt"
-    echo "  -d [receivers]       Receivers list or receivers.txt"
-    echo "  -e [email_config]    Email configuration: email:password:emaildomain:port"
+    echo "  -k                   Keywords list"
+    echo "  -w                   Websites list"
+    echo "  -d                   Receivers list"
     echo "  -h                   Display this help message"
     echo "  -f                   Execute the program with fork"
     echo "  -t                   Execute the program with threads"
@@ -160,7 +132,9 @@ while [[ $# -gt 0 ]]; do
                 log_directory="$1"
                 shift
             else
+                log_message "ERROR" "Missing argument for -l flag"
                 echo "Error: Missing argument for -l flag"
+                # display deta
                 exit 1
             fi
             ;;
@@ -221,7 +195,6 @@ execute_monitor_script() {
             touch "$log_directory/history.log"
         fi
         HISTORY_LOG="$log_directory/history.log"
-        echo "HIstory log: $HISTORY_LOG"
         # replace the log directory in the config file
         sed -i "s|HISTORY_LOG=.*|HISTORY_LOG=$HISTORY_LOG|" "$CONFIG_FILE"
     fi
@@ -255,7 +228,7 @@ execute_monitor_script() {
         
     else
         # Execute the program normally
-        ./check.sh -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
+        "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
     fi
 }
 
@@ -291,16 +264,22 @@ main() {
         # ask user to provide the receivers list
         echo "Please provide the receivers list"
         while true; do
-            > receivers.txt
-            read -p "Enter receiver email (or 'q' to quit): " receiver
+            read -p "Receiver (q to stop): " receiver
+            # if the receiver is empty, break the loop
+            if [ -z "$receiver" ]; then
+                continue
+            fi
             if [ "$receiver" = "q" ]; then
                 break
             fi
-            # override the receivers list
-            echo "$receiver">> receivers.txt
-            
+            # append the receiver to the receivers list
+            receivers+=("$receiver")
         done
-        echo "">> receivers.txt
+        # write the receivers list to the config file
+        > "receivers.txt"
+        for receiver in "${receivers[@]}"; do
+            echo "$receiver" >> "receivers.txt"
+        done
         exit 0
     fi
        # check if config file exist if not or doesn't contain config print run ./main config to config
