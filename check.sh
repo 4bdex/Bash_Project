@@ -32,15 +32,22 @@ log_message() {
     message=$2
     echo "$current_date : $current_user : $Type : $message" >> "$HISTORY_LOG"
 }
-# Function to handle errors
-handle_error() {
-    local error_code=$1
-    local error_message=$2
-    # log the error message with error code and the code should be printed to the standard error
-    log_message "ERROR $error_code" "$error_message"
-    echo "Error $error_code: $error_message" >&2
-    display_help
-    exit "$error_code"
+# display help message
+display_help() {
+    echo "Usage: $0 [options]"
+    echo "Options:"
+    echo "  config               Configure the email settings and receivers list"
+    echo "  -a                   If provided, keywords should not exist"
+    echo "  -k                   Keywords list"
+    echo "  -w                   Websites list"
+    echo "  -d                   Receivers list"
+    echo "  -h                   Display this help message"
+    echo "  -f                   Execute the program with fork"
+    echo "  -t                   Execute the program with threads"
+    echo "  -s                   Execute the program in a subshell"
+    echo "  -l [log_directory]   Specify a directory for the log file"
+    echo "  -r                   Reset default parameters (admin only)"
+    exit 0
 }
 
 # Parse command-line arguments
@@ -105,7 +112,7 @@ while [ ${#websites[@]} -gt 0 ]; do
 done
 
 # if an error occurs, the script will exit with an error code
-handle_error 1 "An error occurred"
+trap 'log_message "ERROR" "An error occurred in the script at line $LINENO"' ERR
 # end script 
 # kill the script
 

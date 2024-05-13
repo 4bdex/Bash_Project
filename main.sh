@@ -107,14 +107,14 @@ display_help() {
 
 reset_default_parameters() {
     # Reset the default parameters from defaultconfig.txt
-    # replace the config file content with the default config file content
-    cp defaultconfig.txt "$CONFIG_FILE"
+    # replace the default config file content with the config file content
+     cat defaultconfig.txt > config.txt
     # empty the receivers list
     > "receivers.txt"
     # empty smtp config file
     > "$SMTP_CONFIG"
-    #  set default history log file path
-    HISTORY_LOG="/var/log/monitor/history.log"
+    #  set default history log file path in config file
+    sed -i "s|HISTORY_LOG=.*|HISTORY_LOG=/var/log/monitor/history.log|" "$CONFIG_FILE"
     echo "Default parameters have been reset"
 }
 
