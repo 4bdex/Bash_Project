@@ -32,6 +32,16 @@ log_message() {
     message=$2
     echo "$current_date : $current_user : $Type : $message" >> "$HISTORY_LOG"
 }
+# Function to handle errors
+handle_error() {
+    local error_code=$1
+    local error_message=$2
+
+    log_message "ERROR" "$error_message"
+    echo "Error: $error_message" >&2
+    display_help
+    exit "$error_code"
+}
 
 # Parse command-line arguments
 for arg in $* ; do
@@ -94,6 +104,8 @@ while [ ${#websites[@]} -gt 0 ]; do
     done
 done
 
+# if an error occurs, the script will exit with an error code
+handle_error 1 "An error occurred"
 # end script 
 # kill the script
 

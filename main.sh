@@ -40,16 +40,23 @@ log_message() {
     
     echo "$current_date : $current_user : $Type : $message" >> "$HISTORY_LOG"
 }
+# Function to handle errors
+handle_error() {
+    local error_code=$1
+    local error_message=$2
+    # log the error message with error code and the code should be printed to the standard error
+    log_message "ERROR $error_code" "$error_message"
+    echo "Error $error_code: $error_message" >&2
+    display_help
+    exit "$error_code"
+}
 # trap any generated error to invoke the log_message function with error and error content
 trap 'log_message "ERROR" "An error occurred in the script at line $LINENO"' ERR
-sjbjhbs
 # check if websites are valid
 check_web_sites() {
     for website in "${websites[@]}"; do
         if ! curl --output /dev/null --silent --head --fail "$website"; then
-            log_message "ERROR" "Website $website is not valid"
-            echo "Website $website is not valid"
-            exit 1
+            handle_error 404 "Website $website is not valid"
         fi
     done
 }
@@ -57,9 +64,7 @@ check_web_sites() {
 # check if internet connection is available
 check_internet_connection() {
     if ! ping -c 1 google.com &> /dev/null; then
-        log_message "ERROR" "No internet connection"
-        echo "No internet connection"
-        exit 1
+        handle_error 503 "No internet connection"
     fi
 }
 
@@ -77,10 +82,7 @@ check_root() {
 check_arguments() {
     # check if minimum number of arguments is provided (-k and -w options are required)
     if [ "$#" -lt 4 ]; then
-        echo "Please provide the right number of arguments"
-        echo "Usage: $0 -k keywords -w websites" >&2
-        echo "Use -h option for more details" >&2
-        exit 1
+        handle_error 400 "Missing required arguments"
     fi
 }
 
@@ -132,10 +134,7 @@ while [[ $# -gt 0 ]]; do
                 log_directory="$1"
                 shift
             else
-                log_message "ERROR" "Missing argument for -l flag"
-                echo "Error: Missing argument for -l flag"
-                # display deta
-                exit 1
+                handle_error 400 "Missing argument for -l option"
             fi
             ;;
         -a)
@@ -164,12 +163,10 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         :)
-            echo "Error: Option -$OPTARG requires an argument"
-            exit 1
+            handle_error 400 "Missing argument for -$OPTARG option"
             ;;
         *)
-            echo "Error: Unknown option $1"
-            exit 1
+            handle_error 401 "Invalid option: $1"
             ;;
     esac
 done
@@ -178,10 +175,7 @@ done
 # Function to check if the required arguments are provided
 check_required_arguments() {
     if [ ${#keywords[@]} -eq 0 ] || [ ${#websites[@]} -eq 0 ]; then
-        echo "Please provide all required arguments"
-        echo "Usage: $0 -k keyword -w website" >&2
-        echo "Use -h option for more details" >&2
-        exit 1
+        handle_error 400 "Missing required arguments"
     fi
 }
 
