@@ -57,6 +57,29 @@ itskeyword=0
 itswebsite=0
 
 
+# Function to log the keyword and the website in the history log that takes the error code and the message as arguments
+log_message() {
+    # Get the current date and time
+    current_date=$(date "+%Y-%m-%d %H:%M:%S")
+    # Get the current user
+    current_user=$(whoami)
+    # Get the error type
+    Type=$1
+    # Get the message
+    message=$2
+ 
+    echo "$current_date : $current_user : $Type : $message" >> "$HISTORY_LOG"
+}
+
+# check if internet connection is available
+check_internet_connection() {
+    if ! ping -c 1 google.com &> /dev/null; then
+        log_message "ERROR" "No internet connection"
+        echo "No internet connection"
+        exit 1
+    fi
+}
+
 # Function to check if the script is running as root
 check_root() {
     if [ "$EUID" -ne 0 ]; then
@@ -222,26 +245,9 @@ check_required_arguments() {
     fi
 }
 
-# Function to log the keyword and the website in the history log
-log_history() {
-    # Check if the history log file exists
-    if [ ! -f "$HISTORY_LOG" ]; then
-        echo "History log file not found"
-        exit 1
-    fi
-    
-    # Log the keyword and the website in the history log
-    for keyword in "${keywords[@]}"; do
-        for website in "${websites[@]}"; do
-            echo "$(date +"%Y-%m-%d-%H-%M-%S") : $(whoami) : INFO : Checking keyword '$keyword' in website '$website'" >> "$HISTORY_LOG"
-        done
-    done
-}
-
 # Function to execute the monitoring script
 execute_monitor_script() {
     # replace log_directory if not empty to the log directory in the config file
-    echo "Log directory: $log_directory"
     if [ -n "$log_directory" ]; then
         # if log directory isn't exist, create it
         if [ ! -d "$log_directory" ]; then
@@ -327,7 +333,7 @@ main() {
         echo "">> receivers.txt
         exit 0
     fi
-    # -l option is provided, get the log directory
+    check_internet_connection
     check_root
     check_arguments "$@"
     parse_arguments "$@"
