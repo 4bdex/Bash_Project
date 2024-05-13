@@ -40,8 +40,8 @@
 CONFIG_FILE="config.txt"
 MONITOR_SCRIPT="./check.sh" # usage ./check.sh -k keyword -w website [-a]
 # get History log file path from config file
-HISTORY_LOG=$(grep -i "history_log" "$CONFIG_FILE" | cut -d'=' -f2)
-SMTP_CONFIG=$(grep -i "smtp_config" "$CONFIG_FILE" | cut -d'=' -f2)
+HISTORY_LOG=$(grep -i "HISTORY_LOG" "$CONFIG_FILE" | cut -d'=' -f2)
+SMTP_CONFIG=$(grep -i "SMTP_CONFIG" "$CONFIG_FILE" | cut -d'=' -f2)
 
 # Initialize variables
 keywords=()
@@ -314,35 +314,47 @@ main() {
     if [ "$1" = "-h" ]; then
         display_help
     fi
+ 
+
     if [ "$1" = "config" ]; then
+        echo "$SMTP_CONFIG"
+        # if /etc/ssmtp/ssmtp.conf doesn't exist, create it
+        if [ ! -f "$SMTP_CONFIG" ]; then
+            touch "$SMTP_CONFIG"
+        fi
         # ask user to provide the configuration file (email , password , domain:port , receivers list)
         echo "Please provide the email configuration"
         read -p "Email: " email
         read -p "Password: " password
         read -p "Email Domain: " domain
 
-        # insert data in SMTP_CONFIG
-
-        # cat>SMTP_CONFIG<<EOF
-        # root=$email
-        # mailhub=$domain
-        # AuthUser=$email
-        # AuthPass=$password
-        # UseSTARTTLS=yes
-        # EOF
+        # insert data in SMTP_CONFIG file
+        # overwrite the email configuration
+        echo "root=$email">> $SMTP_CONFIG
+        echo "mailhub=$domain">> $SMTP_CONFIG
+        echo "AuthUser=$email">> $SMTP_CONFIG
+        echo "AuthPass=$password">> $SMTP_CONFIG
+        echo "UseSTARTTLS=yes">> $SMTP_CONFIG
         
         # ask user to provide the receivers list
         echo "Please provide the receivers list"
         while true; do
+            > receivers.txt
             read -p "Enter receiver email (or 'q' to quit): " receiver
             if [ "$receiver" = "q" ]; then
                 break
             fi
-            # add receiver to receivers.txt file
-            echo "$receiver" >> receivers.txt
+            # override the receivers list
+            echo "$receiver">> receivers.txt
+            
         done
         echo "">> receivers.txt
         exit 0
+    fi
+       # check if config file exist if not or doesn't contain config print run ./main config to config
+    if [ ! -f "$SMTP_CONFIG" ]; then
+        echo "Please run './main.sh config' to provide the configuration"
+        exit 1
     fi
     check_internet_connection
     check_root

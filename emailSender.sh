@@ -1,43 +1,28 @@
 #!/bin/bash
 
+
+# variable
+#  get email_config from config file
+EMAIL_CONFIG=$(grep -i "EMAIL_CONFIG" "$CONFIG_FILE" | cut -d'=' -f2)
 # Vérifier si le nombre d'arguments est correct
 if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <email1> <mot_de_passe_application_specifique> <Domaine_Name> <fichier_emails>"
+    echo "Usage: $0 <subject> <message>"
     exit 1
 fi
 
-email1=""
-mot_de_passe_app_specifique=""
-domaine_Name=""
-fichier=$1
+subject=$1
 message=$2
-fichier_emails=$3
+fichier_emails=receivers.txt
 
-# Vérifier si le fichier d'emails existe
-if [ ! -f "$fichier_emails" ]; then
-    echo "Le fichier d'emails $fichier_emails n'existe pas."
+# Vérifier si le fichier d'emails n'existe pas ou est vide
+if [ ! -s "$fichier_emails" ]; then
+    echo "Le fichier $fichier_emails n'existe pas ou est vide"
     exit 1
 fi
 
 
-# Lecture de la première ligne du fichier
-while read -r email password domain
-do
-    # Stockage des données dans des variables
-    email1="$email"
-    mot_de_passe_app_specifique="$password"
-    domaine_Name="$domain"
-    break # Sortie après lecture de la première ligne
-done < "$fichier"
-
-cat>/etc/ssmtp/ssmtp.conf<<EOF
-root=$email1
-mailhub=$domaine_Name
-AuthUser=$email1
-AuthPass=$mot_de_passe_app_specifique
-UseSTARTTLS=yes
-EOF
-
+# get email from /etc/ssmtp/ssmtp.conf file
+email1=$(grep -i "AuthUser" /etc/ssmtp/ssmtp.conf | cut -d'=' -f2)
 
 # Lire chaque email du fichier et envoyer le message "Hello, World!" à chaque adresse email
 while IFS= read -r email; do
