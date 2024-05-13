@@ -69,7 +69,7 @@ fi
 # a while loop to check for each website if the keywords exist or not based on the should_exist value, 
 # if result is true, then it will break the loop , remove the website from the list and continue to the next website
 # print the result of the check for each website passed the check
-
+messages()
 while [ ${#websites[@]} -gt 0 ]; do
     website=${websites[0]}
     echo "Checking $website"
@@ -81,6 +81,7 @@ while [ ${#websites[@]} -gt 0 ]; do
         if echo "$websiteContent" | grep -qi "$keyword"; then
             if [ "$should_exist" = true ]; then
                 echo "Keyword $keyword found in $website"
+              #  messages+=("Keyword $keyword found in $website")
                 # Remove the website from the list
                 websites=("${websites[@]:1}")
                 break
@@ -88,6 +89,7 @@ while [ ${#websites[@]} -gt 0 ]; do
         else
             if [ "$should_exist" = false ]; then
                 echo "Keyword $keyword not found in $website"
+                #messages+=("Keyword $keyword not found in $website")
                 # Remove the website from the list
                 websites=("${websites[@]:1}")
                 break
