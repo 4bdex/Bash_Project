@@ -81,6 +81,8 @@ while [ ${#websites[@]} -gt 0 ]; do
         if echo "$websiteContent" | grep -qi "$keyword"; then
             if [ "$should_exist" = true ]; then
                 echo "Keyword $keyword found in $website"
+                # send email to the admin
+                # send_email "Keyword $keyword found in $website"
               #  messages+=("Keyword $keyword found in $website")
                 # Remove the website from the list
                 websites=("${websites[@]:1}")
@@ -90,6 +92,7 @@ while [ ${#websites[@]} -gt 0 ]; do
             if [ "$should_exist" = false ]; then
                 echo "Keyword $keyword not found in $website"
                 #messages+=("Keyword $keyword not found in $website")
+                 # send_email "Keyword $keyword found in $website"
                 # Remove the website from the list
                 websites=("${websites[@]:1}")
                 break
