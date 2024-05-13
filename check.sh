@@ -1,7 +1,19 @@
 #!/bin/bash
 # Usage: sudo monitor.sh -k keyword1 keyword2 ... -w website1 website2 ... -a true|false
 
-echo "PID of the script: $$"
+# Function to log that takes the error code and the message as arguments
+log_message() {
+    # Get the current date and time
+    current_date=$(date "+%Y-%m-%d %H:%M:%S")
+    # Get the current user
+    current_user=$(whoami)
+    # Get the error type
+    Type=$1
+    # Get the message
+    message=$2
+ 
+    echo "$current_date : $current_user : $Type : $message" >> "$HISTORY_LOG"
+}
 
 # Constants
 CONFIG_FILE="config.txt"
@@ -43,9 +55,7 @@ for arg in $* ; do
         fi
 done
 
-echo "Keywords: ${keywords[@]}"
-echo "Websites: ${websites[@]}"
-echo "Should exist: $should_exist"
+
 
 # Log the keywords and the websites in the history log
 # Check if the history log file exists
@@ -55,29 +65,7 @@ if [ ! -f "$HISTORY_LOG" ]; then
     touch "$HISTORY_LOG"
 fi
 
-# Iterate over each website and check if the keywords exists based on the should_exist value
 
-# for website in "${websites[@]}"; do
-#     echo "Checking $website"
-#     for keyword in "${keywords[@]}"; do
-#         echo "Checking for keyword: $keyword"
-#         # Check if the keyword exists in the website
-#         if curl -s "$website" | grep -q "$keyword"; then
-#             # Log the keyword and website in the history log
-#             echo "$(date) - $keyword found in $website" >> "$HISTORY_LOG"
-#             if [ "$should_exist" = false ]; then
-#                 echo "Keyword $keyword found in $website"
-#             fi
-#         else
-#             # Log the keyword and website in the history log
-#             echo "$(date) - $keyword not found in $website" >> "$HISTORY_LOG"
-#             if [ "$should_exist" = true ]; then
-#                 echo "Keyword $keyword not found in $website"
-#                 break
-#             fi
-#         fi
-#     done
-# done
 # a while loop to check for each website if the keywords exist or not based on the should_exist value, 
 # if result is true, then it will break the loop , remove the website from the list and continue to the next website
 # print the result of the check for each website passed the check
@@ -86,7 +74,7 @@ while [ ${#websites[@]} -gt 0 ]; do
     website=${websites[0]}
     echo "Checking $website"
     for keyword in "${keywords[@]}"; do
-        echo "Checking for keyword: $keyword"
+        echo "Checking for keyword: $keyword" #TODO: Remove this line
         # Check if the keyword exists in the website
         websiteContent=$(curl -s -L "$website")
         # comparisation should not be case sensitive

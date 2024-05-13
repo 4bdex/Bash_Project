@@ -57,7 +57,7 @@ itskeyword=0
 itswebsite=0
 
 
-# Function to log the keyword and the website in the history log that takes the error code and the message as arguments
+# Function to log that takes the error code and the message as arguments
 log_message() {
     # Get the current date and time
     current_date=$(date "+%Y-%m-%d %H:%M:%S")
@@ -69,6 +69,17 @@ log_message() {
     message=$2
  
     echo "$current_date : $current_user : $Type : $message" >> "$HISTORY_LOG"
+}
+
+# check if websites are valid
+check_web_sites() {
+    for website in "${websites[@]}"; do
+        if ! curl --output /dev/null --silent --head --fail "$website"; then
+            log_message "ERROR" "Website $website is not valid"
+            echo "Website $website is not valid"
+            exit 1
+        fi
+    done
 }
 
 # check if internet connection is available
@@ -338,6 +349,7 @@ main() {
     check_arguments "$@"
     parse_arguments "$@"
     check_required_arguments
+    check_web_sites
     execute_monitor_script
 }
 
