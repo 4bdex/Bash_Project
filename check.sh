@@ -36,9 +36,9 @@ log_message() {
 handle_error() {
     local error_code=$1
     local error_message=$2
-
-    log_message "ERROR" "$error_message"
-    echo "Error: $error_message" >&2
+    # log the error message with error code and the code should be printed to the standard error
+    log_message "ERROR $error_code" "$error_message"
+    echo "Error $error_code: $error_message" >&2
     display_help
     exit "$error_code"
 }
