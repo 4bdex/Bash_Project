@@ -1,20 +1,6 @@
 #!/bin/bash
 # Usage: sudo monitor.sh -k keyword1 keyword2 ... -w website1 website2 ... -a true|false
 
-# Function to log that takes the error code and the message as arguments
-log_message() {
-    # Get the current date and time
-    current_date=$(date "+%Y-%m-%d %H:%M:%S")
-    # Get the current user
-    current_user=$(whoami)
-    # Get the error type
-    Type=$1
-    # Get the message
-    message=$2
- 
-    echo "$current_date : $current_user : $Type : $message" >> "$HISTORY_LOG"
-}
-
 # Constants
 CONFIG_FILE="config.txt"
 
@@ -58,18 +44,29 @@ done
 
 
 # Log the keywords and the websites in the history log
-# Check if the history log file exists
-if [ ! -f "$HISTORY_LOG" ]; then
-    # Create the history log file if it doesn't exist (/var/log/monitor/history.log)
-    mkdir -p "$(dirname "$HISTORY_LOG")"
-    touch "$HISTORY_LOG"
-fi
 
 
+# Function to log that takes the error code and the message as arguments
+log_message() {
+        # Check if the history log file exists
+    if [ ! -f "$HISTORY_LOG" ]; then
+        # Create the history log file if it doesn't exist (/var/log/monitor/history.log)
+        mkdir -p "$(dirname "$HISTORY_LOG")"
+        touch "$HISTORY_LOG"
+    fi
+    # Get the current date and time
+    current_date=$(date "+%Y-%m-%d %H:%M:%S")
+    # Get the current user
+    current_user=$(whoami)
+    # Get the error type
+    Type=$1
+    # Get the message
+    message=$2
+ 
+    echo "$current_date : $current_user : $Type : $message" >> "$HISTORY_LOG"
+}
 # a while loop to check for each website if the keywords exist or not based on the should_exist value, 
 # if result is true, then it will break the loop , remove the website from the list and continue to the next website
-# print the result of the check for each website passed the check
-messages()
 while [ ${#websites[@]} -gt 0 ]; do
     website=${websites[0]}
     echo "Checking $website"
@@ -84,6 +81,7 @@ while [ ${#websites[@]} -gt 0 ]; do
                 # send email to the admin
                 # send_email "Keyword $keyword found in $website"
               #  messages+=("Keyword $keyword found in $website")
+                log_message "INFO" "Keyword $keyword found in $website"
                 # Remove the website from the list
                 websites=("${websites[@]:1}")
                 break
@@ -93,6 +91,7 @@ while [ ${#websites[@]} -gt 0 ]; do
                 echo "Keyword $keyword not found in $website"
                 #messages+=("Keyword $keyword not found in $website")
                  # send_email "Keyword $keyword found in $website"
+                log_message "INFO" "Keyword $keyword not found in $website"
                 # Remove the website from the list
                 websites=("${websites[@]:1}")
                 break

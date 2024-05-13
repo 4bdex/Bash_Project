@@ -134,52 +134,7 @@ display_help() {
 
 # Function to parse the command-line arguments
 parse_arguments() {
-#     for arg in $@ ; do
 
-#         if [ "$arg" == '-k' ]; then
-#                 itskeyword=1
-#                 itswebsite=0
-
-#         elif [ "$arg" == '-w' ]; then
-#                 itskeyword=0
-#                 itswebsite=1
-#         #if the argument is an option, then we should skip it
-#         # -a without argument
-#         elif [ "$arg" == "-a" ]; then
-#                 should_exist="false"
-#                 itskeyword=0
-#                itswebsite=0
-#         elif [ "$arg" == "-f" ]; then
-#                 fork=true
-#                 itskeyword=0
-#                itswebsite=0
-#         elif [ "$arg" == "-t" ]; then
-#                 threads=true
-#                 itskeyword=0
-#                itswebsite=0
-#         elif [ "$arg" == "-s" ]; then
-#                 subshell=true
-#                 itskeyword=0
-#                 itswebsite=0
-#         elif [ "$arg" == "-r" ]; then
-#                 # Reset default parameters (admin only)
-#                 echo "Reset default parameters"
-#                 exit 0
-#                 itskeyword=0
-#                 itswebsite=0
-#         elif [ "$arg" == "-l" ]; then
-#                 # -l option is provided, get the log directory from the next argument (exemple: -k key1 key2 -w web1 -l /var/log)
-#                 log_directory=$2
-#                 itskeyword=0
-#                 itswebsite=0
-
-#         elif [ $itskeyword -eq 1 ]; then
-#                 keywords="$keywords $arg"
-
-#         elif [ $itswebsite -eq 1 ]; then
-#                 websites="$websites $arg"
-#         fi
-# done
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -k)
@@ -300,10 +255,7 @@ execute_monitor_script() {
         
     else
         # Execute the program normally
-        echo "Executing the program normally"
-        echo "shoud exist: $should_exist"
-        echo "PID: $$"
-        "$MONITOR_SCRIPT" -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
+        ./check.sh -k "${keywords[@]}" -w "${websites[@]}" -a "$should_exist"
     fi
 }
 
