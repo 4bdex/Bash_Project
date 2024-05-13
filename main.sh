@@ -105,6 +105,18 @@ display_help() {
     exit 0
 }
 
+reset_default_parameters() {
+    # Reset the default parameters from defaultconfig.txt
+    # replace the config file content with the default config file content
+    cp defaultconfig.txt "$CONFIG_FILE"
+    # empty the receivers list
+    > "receivers.txt"
+    # empty smtp config file
+    > "$SMTP_CONFIG"
+    #  set default history log file path
+    HISTORY_LOG="/var/log/monitor/history.log"
+    echo "Default parameters have been reset"
+}
 
 # Function to parse the command-line arguments
 parse_arguments() {
@@ -157,11 +169,6 @@ while [[ $# -gt 0 ]]; do
             subshell=true
             shift
             ;;
-        -r)
-            # Reset default parameters (admin only)
-            echo "Reset default parameters"
-            exit 0
-            ;;
         :)
             handle_error 400 "Missing argument for -$OPTARG option"
             ;;
@@ -181,6 +188,7 @@ check_required_arguments() {
 
 # Function to execute the monitoring script
 execute_monitor_script() {
+    # check if log directory not exist, 
     # replace log_directory if not empty to the log directory in the config file
     if [ -n "$log_directory" ]; then
         # if log directory isn't exist, create it
@@ -233,7 +241,6 @@ main() {
     if [ "$1" = "-h" ]; then
         display_help
     fi
- 
 
     if [ "$1" = "config" ]; then
         echo "$SMTP_CONFIG"
@@ -276,11 +283,20 @@ main() {
         done
         exit 0
     fi
-       # check if config file exist if not or doesn't contain config print run ./main config to config
+  
+    # option to reset the default parameters
+    if [ "$1" = "-r" ]; then
+        check_root
+        reset_default_parameters
+        exit 0
+    fi
+
+    # check if config file exist if not or doesn't contain config print run ./main config to config
     if [ ! -f "$SMTP_CONFIG" ]; then
         echo "Please run './main.sh config' to provide the configuration"
         exit 1
     fi
+
     check_internet_connection
     check_root
     check_arguments "$@"
