@@ -114,7 +114,6 @@ reset_default_parameters() {
     # empty smtp config file
     > "$SMTP_CONFIG"
     #  set default history log file path in config file
-    sed -i "s|HISTORY_LOG=.*|HISTORY_LOG=/var/log/monitor/history.log|" "$CONFIG_FILE"
     echo "Default parameters have been reset"
 }
 
